@@ -1,0 +1,20 @@
+[color]
+	diff = auto
+	status = auto
+	branch = auto
+
+[merge]
+	tool = meld
+
+[core]
+	editor = emacs
+
+[alias]
+	st = status
+	gg = goggles
+	lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --
+	lgp = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit -p --
+	authors = "!f() { git log --pretty='%aN <%aE>' \"$@\" | sort | uniq -c | sort -k1nr; }; f"
+        edit-unmerged = "!f() { git ls-files --unmerged | cut -f2 | sort -u ; }; emacs `f`"
+        add-unmerged = "!f() { git ls-files --unmerged | cut -f2 | sort -u ; }; git add `f`"
+        graphviz = "!f() { echo 'digraph git {' ; git log --pretty='format:  %h -> { %p }' \"$@\" | sed 's/[0-9a-f][0-9a-f]*/\"&\"/g' ; echo '}'; }; f"
