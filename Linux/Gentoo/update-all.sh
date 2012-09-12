@@ -5,5 +5,6 @@ emerge --sync && \
     eix-update && \
     eupdatedb && \
     emerge --update --newuse --deep --with-bdeps=y @world && \
-    emerge --depclean && \
     revdep-rebuild
+
+echo "Now, you can run 'emerge --depclean'"
