@@ -9,6 +9,7 @@ alias ll='ls $LS_OPTIONS -l'
 alias la='ls $LS_OPTIONS -A'
 alias l='ls $LS_OPTIONS -lA'
 alias grep='grep --color=auto'
+alias e='emacs -nw -q'
 
 ## Correction alias for mispelled commands
 ## Prints a warning, then runs the actual command.
@@ -39,7 +40,6 @@ function hl() {
 ## System utilities
 alias ssh_show_known_hosts='ssh-keygen -l -f ~/.ssh/known_hosts'
 alias udevenv="udevadm info --query=env --name"
-alias ls='ls --color=auto --time-style=long-iso'
 function cleancfg() {
   if [ -n "$1" ]; then
      cat "$1"
