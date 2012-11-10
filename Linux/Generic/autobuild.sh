@@ -79,8 +79,6 @@ echo "Listening for changes on ${LISTENDIR}"
 echo "Will run \`${COMMAND}' upon changes"
 echo "------------------------------------------------------------"
 
-exit
-
 fade() {
     sed 's/^\(.*\)$/\x1b[1;30m\1\x1b[0m/'
 }
