@@ -53,6 +53,8 @@ while getopts "hw:l:n:" OPTION; do
     esac
 done
 
+shift $[ $OPTIND - 1 ]
+
 ## -- process options
 
 COMMAND="$@"
