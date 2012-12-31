@@ -1,0 +1,2 @@
+# Repo for RabbitMQ
+deb http://www.rabbitmq.com/debian/ testing main
