@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 ## Simple genkernel command to fully install kernel from the current
 ## directory. This is useful when manually configuring and building
