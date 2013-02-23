@@ -87,3 +87,13 @@ export PS1="\033[G${NICEPROMPT_BASEPROMPT}
 
 ## Don't let virtualenv show prompts by itself
 VIRTUAL_ENV_DISABLE_PROMPT=1
+
+## Let's change the PROMPT_COMMAND too, to make it more useful..
+case "$TERM" in
+xterm*|rxvt*)
+    ## by the way, we might want to use this instead of PS1 stuff..
+    PROMPT_COMMAND='echo -ne "\033]0;${HOSTNAME%%.*} (${USER}) ${PWD}\007"'
+    ;;
+*)
+    ;;
+esac
