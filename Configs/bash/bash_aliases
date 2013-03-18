@@ -1,0 +1,62 @@
+############################################################
+## Bash aliases
+############################################################
+
+export LS_OPTIONS='--color=auto --time-style=long-iso'
+eval "`dircolors`"
+alias ls='ls $LS_OPTIONS'
+alias ll='ls $LS_OPTIONS -l'
+alias la='ls $LS_OPTIONS -A'
+alias l='ls $LS_OPTIONS -lA'
+alias grep='grep --color=auto'
+
+EDITOR=emacs
+alias e='$EDITOR'
+
+## Correction alias for mispelled commands
+## Prints a warning, then runs the actual command.
+correction_alias() {
+    alias $1="echo 'Did you mean $2?' >&2;$2"
+}
+
+correction_alias sl ls
+correction_alias mdkir mkdir
+
+## Other utility functions
+alias md='mkdir'
+function mdcd() { mkdir "$1" && cd "$1"; }
+alias tmp='cd $( mktemp -d )'
+alias rm_pyc='find -type f -name "*.pyc" -print -delete'
+alias rm_bck='find -type f -name "*~" -print -delete'
+
+## Find/xargs using NULL separator
+function find0 () {
+    find "$@" -print0
+}
+alias xargs0='xargs -0'
+
+## Wget, simulating browser user agents..
+alias wget_chromium='wget -U "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.57 Safari/537.1"'
+alias wget_firefox='wget -U "Mozilla/5.0 (X11; Linux x86_64; rv:10.0.6) Gecko/20100101 Firefox/10.0.6"'
+
+## DRUSH, the Drupal Shell
+# export DRUSH=/home/www/DRUPAL/SCRIPTS/drush/drush
+
+## Highlight source code shortcut
+function hl() {
+    pygmentize "$@" | less -RN
+}
+
+## System utilities
+alias ssh_show_known_hosts='ssh-keygen -l -f ~/.ssh/known_hosts'
+alias udevenv="udevadm info --query=env --name"
+function cleancfg() {
+  if [ -n "$1" ]; then
+     cat "$1"
+  else
+     cat
+  fi |  grep -v '^#\|^\s*$'
+}
+
+## Simulate the old modprobe -l
+alias modprobe_l='find /lib/modules/"$(uname -r)" -type f -iname "*.o" -or -iname "*.ko"'
