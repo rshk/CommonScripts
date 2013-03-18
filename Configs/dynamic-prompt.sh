@@ -2,6 +2,8 @@
 
 ## Set prompt color based on hostname and username hash
 
+source "$( dirname "$0" )"/bash_prompt
+
 HOST_CKSUM="$( echo "${USER}@${HOSTNAME}" | cksum )"
 C1="$[ 31 + $( echo "$HOST_CKSUM" | cut -c1-3 | sed 's/^0*//' ) % 6 ]"
 C2="$[ 31 + $( echo "$HOST_CKSUM" | cut -c4-6 | sed 's/^0*//' ) % 6 ]"
