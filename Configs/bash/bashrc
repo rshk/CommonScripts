@@ -1,4 +1,6 @@
 ## Sources all the interesting bash configurations
 
-source "$( dirname "$0" )"/bash_aliases
-source "$( dirname "$0" )"/dynamic-prompt.sh
+BASEDIR="$( dirname "$BASH_SOURCE" )"
+
+source "$BASEDIR"/bash_aliases
+source "$BASEDIR"/dynamic-prompt.sh
