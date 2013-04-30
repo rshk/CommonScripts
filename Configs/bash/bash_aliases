@@ -60,3 +60,13 @@ function cleancfg() {
 
 ## Simulate the old modprobe -l
 alias modprobe_l='find /lib/modules/"$(uname -r)" -type f -iname "*.o" -or -iname "*.ko"'
+
+## VirtualEnv utilities
+alias pve='echo "$VIRTUAL_ENV"'
+function ve() {
+    if [ -z "$1" ]; then
+	echo "Usage: ve <name>"
+	return 1
+    fi
+    virtualenv "$1" && source "$1"/bin/activate && setvirtualenvproject
+}
