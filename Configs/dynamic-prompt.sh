@@ -1,1 +1,0 @@
-bash/dynamic-prompt.sh
