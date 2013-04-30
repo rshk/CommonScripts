@@ -10,8 +10,13 @@ alias la='ls $LS_OPTIONS -A'
 alias l='ls $LS_OPTIONS -lA'
 alias grep='grep --color=auto'
 
-EDITOR=emacs
-alias e='$EDITOR'
+## Editor configuration
+EDITOR="emacs -nw"  # the $EDITOR
+alias e='$EDITOR'  # launch the $EDITOR
+alias ec='emacsclient -a ""'  # standard emacsclient
+alias ew='emacs -nw'  # no-window
+alias eq='emacs -nw -q'  # quick
+alias vim='echo "Not a chance.."'
 
 ## Correction alias for mispelled commands
 ## Prints a warning, then runs the actual command.
