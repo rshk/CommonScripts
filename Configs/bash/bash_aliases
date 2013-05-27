@@ -16,7 +16,7 @@ alias e='$EDITOR'  # launch the $EDITOR
 alias ec='emacsclient -a ""'  # standard emacsclient
 alias ew='emacs -nw'  # no-window
 alias eq='emacs -nw -q'  # quick
-alias vim='echo "Not a chance.."'
+alias vim="echo \"Why don't you try emacs?\"; sleep 3; vim"
 
 ## Correction alias for mispelled commands
 ## Prints a warning, then runs the actual command.
