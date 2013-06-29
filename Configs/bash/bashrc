@@ -2,5 +2,11 @@
 
 BASEDIR="$( dirname "$BASH_SOURCE" )"
 
+## Configure history
+HISTSIZE=10000
+HISTFILESIZE=20000
+HISTTIMEFORMAT="[%F %T] "
+HISTCONTROL=ignoredups
+
 source "$BASEDIR"/bash_aliases
 source "$BASEDIR"/dynamic-prompt.sh
