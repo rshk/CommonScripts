@@ -65,8 +65,17 @@ if [ -z "$COMMAND" ]; then
     exit 1
 fi
 
-if [ "$ENABLE_NOTIFY" == "1" ] && ! which inotifywait &>/dev/null; then
-    echo "WARNING: Program 'inotifywait' is not installed"
+## inotifywait is required
+if ! which inotifywait &>/dev/null; then
+    echo "ERROR: Program 'inotifywait' is not installed"
+    echo "Please install the inotify-tools package."
+    exit 1
+fi
+
+## We need notify-send in order to send notifications.
+## Just disable notifications if we don't have it.'
+if [ "$ENABLE_NOTIFY" == "1" ] && ! which notify-send &>/dev/null; then
+    echo "WARNING: Program 'notify-send' is not installed"
     echo "Disabling notifications"
     ENABLE_NOTIFY=0
 fi
