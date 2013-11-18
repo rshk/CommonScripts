@@ -1,10 +1,13 @@
 #!/bin/bash
 
-##------------------------------------------------------------
-## Improved, generic auto-builder script
-## Author: Samuele Santi
-## License: (C)2012 - Under GPL v3 or later
-##------------------------------------------------------------
+##
+## autobuild.sh - Generic autobuilder script for Linux.
+##
+## Waits for changes in a given directory, then runs
+## a command (usually, to rebuild something).
+##
+## (C) 2012-2013 Samuele Santi - Under BSD 2-clause License
+##
 
 usage() {
 cat <<EOF
