@@ -121,13 +121,17 @@ while :; do
 	if [ "$RET" == "0" ]; then
 	    ICO="dialog-information"
 	    TITLE="Command execution successful"
+	    URGENCY=normal
+	    TIMEOUT=2000
 	else
 	    ICO="dialog-error"
 	    TITLE="Command execution failed"
+	    URGENCY=critical
+	    TIMEOUT=5000
 	fi
 	notify-send "$TITLE" \
-	    "Command was: \`${COMMAND}'\n\nWorkdir: $(pwd)\n\nReturn code: $RET" \
-	    --icon="$ICO" \
+	    "Command was: \`${COMMAND}'\n\nWorkdir: ${WORKDIR}\n\nReturn code: $RET" \
+	    --icon="$ICO" --urgency="$URGENCY" --expire-time="$TIMEOUT" \
 	    2>&1 | fade
     fi
 done
