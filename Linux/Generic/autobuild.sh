@@ -17,14 +17,21 @@ OPTIONS
   -h  Show this help and exit
 
   -w <dir>
+
       Specify the working directory in which to execute
       the command. (Default: current directory)
 
   -l <dir>
+
       Specify in which directory to listen for changes
       (Default: current directory)
 
+  -e <pattern>
+
+      Specify an exclude pattern for inotifywait.
+
   -n 0/1
+
       Specify whether to enable notifications (Default: 1)
 EOF
 }
@@ -33,7 +40,11 @@ WORKDIR="$PWD"
 LISTENDIR="$PWD"
 ENABLE_NOTIFY=1
 
-while getopts "hw:l:n:" OPTION; do
+## Exclude: *~ #*# .#*
+EXCLUDE='.*~|\.#.*|#.*#'
+
+
+while getopts "hw:l:n:e:" OPTION; do
     case $OPTION in
 	h)
 	    usage
@@ -47,6 +58,9 @@ while getopts "hw:l:n:" OPTION; do
 	    ;;
 	n)
 	    ENABLE_NOTIFY="$OPTARG"
+	    ;;
+	e)
+	    EXCLUDE="${EXCLUDE}|${OPTARG}"
 	    ;;
 	?)
 	    echo "Invalid option: -${OPTARG}"
@@ -98,7 +112,9 @@ fade() {
 }
 
 while :; do
-    inotifywait -r -e "$LISTENSIGNALS" "$LISTENDIR" 2>&1 | fade
+    inotifywait -r -e "$LISTENSIGNALS" \
+	--exclude "$EXCLUDE" \
+	"$LISTENDIR" 2>&1 | fade
     $COMMAND
     RET="$?"
     if [ "$ENABLE_NOTIFY" -eq "1" ]; then
