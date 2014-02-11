@@ -1,5 +1,16 @@
 #!/usr/bin/env python
 
+"""
+
+Generate a nice prompt for bash, taking colors from the hash
+of user / host names.
+
+To use, put this in your .bashrc:
+
+eval $( python /opt/CommonScripts/Configs/bash/gen-ps1.py )
+
+"""
+
 import socket
 import getpass
 import hashlib
