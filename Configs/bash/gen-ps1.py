@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 
 """
-
 Generate a nice prompt for bash, taking colors from the hash
 of user / host names.
 
 To use, put this in your .bashrc:
 
 eval $( python /opt/CommonScripts/Configs/bash/gen-ps1.py )
-
 """
 
 from __future__ import print_function, division
@@ -19,11 +17,11 @@ import hashlib
 import sys
 import colorsys
 import struct
+import os
 
 
-## Utilities
-##--------------------
-
+# Utilities
+#--------------------
 
 def color_luminance(r, g, b):
     """
@@ -55,60 +53,20 @@ def color_from_8bit(color):
     return tuple(x / 6 for x in (r, g, b))
 
 
-## Prompt generators
-##--------------------
+# Prompt generators
+#--------------------
 
 
 def prompt_256color(userstring):
     sha = hashlib.sha1(userstring).digest()
-    ## 256 colors are: ]x1b[38;5;<n>m where <n> is
-    ## 16 + 36 * r + 6 * g + b
-    ## and 0 <= (r, g, b) <= 5
+
+    # 256 colors are: ]x1b[38;5;<n>m where <n> is
+    # 16 + 36 * r + 6 * g + b
+    # and 0 <= (r, g, b) <= 5
 
     # The colors should be in the range 16-231
 
-    # def color_from_bytes(b):
-    #     """Parse three bytes into a color three-tuple"""
-    #     if len(b) != 3:
-    #         raise ValueError("We need exactly three bytes!")
-    #     b = map(ord, b)  # todo: support py3k too!
-    #     return [x / 255 for x in b]
-
-    # def color_to_8bit(r, g, b):
-    #     """
-    #     Convert a (r, g, b) color (where 0 <= r,g,b <= 1)
-    #     to a 8 bit color.
-    #     """
-    #     return int(round(16 + (36 * r * 5) + (6 * g * 5) + (b * 5)))
-
-    # def is_color_light(r, g, b):
-    #     luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
-    #     return luminance > 0.5
-
-    # def color_to_ansi(r, g, b, bg=False):
-    #     """
-    #     Convert a RGB color to ANSI escape code.
-
-    #     :param bg:
-    #         if True, will generate escape codes for background
-    #         color, and add white or black foreground depending
-    #         on the hue
-    #     """
-    #     colorcodes = []
-
-    #     if bg:
-    #         fgcolor = '\\[\\033[{0}m\\]'.format(
-    #             '30' if is_color_light(r, g, b) else '37')
-    #         colorcodes.append(fgcolor)
-
-    #     color = color_to_8bit(r, g, b)
-    #     prefix = "48" if bg else "38"
-    #     col = '\\[\\033[{0};5;{1}m\\]'.format(prefix, color)
-    #     colorcodes.append(col)
-
-    #     return ''.join(colorcodes)
-
-    ## Calculate "seeds" to generate colors
+    # Calculate "seeds" to generate colors
     _user_seed = struct.unpack('!I', sha[0:4])[0]
     _host_seed = struct.unpack('!I', sha[4:8])[0]
     _path_seed = struct.unpack('!I', sha[8:12])[0]
@@ -127,9 +85,6 @@ def prompt_256color(userstring):
     host_rgb = color_from_8bit(host_color)
     host_lum = color_luminance(*host_rgb)
     host_fg_color = '37' if host_lum < 0.35 else '30'
-
-    # user_color = color_to_ansi(*color_from_bytes(sha[0:3]), bg=True)
-    # host_color = color_to_ansi(*color_from_bytes(sha[3:6]), bg=True)
 
     # We only want colors with luminance > .35 !
     path_color = _path_seed * color_range_delta / maxint + color_range[0]
@@ -162,6 +117,7 @@ def prompt_256color(userstring):
 
 
 def prompt_color(userstring):
+    # todo: this should be a limited color version of the 256 color prompt
     sha = hashlib.sha1(userstring).digest()
 
     def get_color(ch):
@@ -219,10 +175,14 @@ def do_print_prompt():
         userstring = sys.argv[1]
     else:
         userstring = '{0}@{1}'.format(getpass.getuser(), socket.gethostname())
+        prompt_seed = os.environ.get('PROMPT_SEED')
+        if prompt_seed is not None:
+            # Allow "seeding" the prompt, to avoid ugly colors...
+            userstring = '{0}:{1}'.format(prompt_seed, userstring)
 
     print('case "$TERM" in')
 
-    print('xterm-256color)',
+    print('xterm-256color|screen)',
           "PS1='{0}'".format(prompt_256color(userstring)), ';;')
 
     print('xterm-color)',
@@ -235,7 +195,7 @@ def do_print_prompt():
 
 
 def do_test_contrast():
-    ## We print a matrix of 16 x 16 color
+    # We print a matrix of 16 x 16 color
     reset = "\x1b[0m"
     for x in xrange(16):
         for y in xrange(16):
