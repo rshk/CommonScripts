@@ -83,7 +83,7 @@ def _colorize_chain_header(line):
     data['attrs'] = data['attrs'].replace('DROP', col256('DROP', fg=160))
 
     return (
-        # u"\033[48;5;235m\033[K"
+        u"\033[48;5;235m\033[K"
         u"\033[1m{prefix}\033[0m"
         u"\033[48;5;20m\033[38;5;255m {name} \033[0m"
         u" ({attrs})\n"
@@ -120,12 +120,16 @@ def _colorize_target_name(name):
         return col256(name, fg=160)
     if name == 'RETURN':
         return col256(name, fg=33)
+    if name in ('DNAT', 'SNAT', 'MASQUERADE'):
+        return col256(name, fg=92)
+    if name == 'LOG':
+        return col256(name, fg=87)
     return col256(name, fg=166)
 
 
 def _colorize_protocol(proto):
     if proto == 'all':
-        return col256(proto, fg=124)
+        return col256(proto, fg=240)
     if proto == 'tcp':
         return col256(proto, fg=178)
     if proto == 'udp':
@@ -144,6 +148,14 @@ def _colorize_options(opt):
 def _colorize_interface(intf):
     if intf == '*':
         return col256(intf, fg=240)
+    if intf.startswith('green'):
+        return col256(intf, fg=34)
+    if intf.startswith('red'):
+        return col256(intf, fg=160)
+    if intf.startswith('tun'):
+        return col256(intf, fg=27)
+    if intf == 'lo':
+        return col256(intf, fg=184)
     return intf
 
 
@@ -153,9 +165,47 @@ def _colorize_addr(addr):
     return addr
 
 
+def _colorize_extras_token(tok):
+    if re.match(r'^[0-9]+$', tok):
+        return col256(tok, 45)
+    if re.match(r'^0x[0-9]+$', tok):
+        return col256(tok, 48)
+    # todo: highlight:
+    # dpt:<port> dpts:<port>:<port>
+    # spt:<port> spts:<port>:<port>
+    # to:<ip> to:<ip>:<port>
+    # from:<ip> from:<ip>:<port>
+    return tok
+
+
 def _colorize_extras(extras):
-    extras = re.sub(r'(/\*.*\*/)', '\x1b[38;5;240m\\1\x1b[0m', extras)
-    return extras
+    tokens = iter(extras.split())
+    output = io.BytesIO()
+    for tok in tokens:
+        if tok == '/*':
+            output.write('\x1b[38;5;240m')
+            output.write(tok)
+            for tok1 in tokens:
+                output.write(tok1)
+                if tok1 == '*/':
+                    output.write('\x1b[0m')
+                    break
+
+        elif tok.startswith('"'):
+            output.write('\x1b[38;5;190m')
+            output.write(tok)
+            for tok1 in tokens:
+                output.write(tok1)
+                if tok1.endswith('"'):
+                    output.write('\x1b[0m')
+                    break
+        else:
+            output.write(_colorize_extras_token(tok).encode('utf-8'))
+
+        output.write(' ')
+
+    # extras = re.sub(r'(/\*.*\*/)', '\x1b[38;5;240m\\1\x1b[0m', extras)
+    return output.getvalue()
 
 
 def _colorize_table_row(row):
