@@ -2,11 +2,12 @@
 
 from __future__ import print_function
 
+import hashlib
 import io
-import re
-import subprocess
-import shlex
 import os
+import re
+import shlex
+import subprocess
 
 
 IPTABLES = ['iptables']
@@ -15,18 +16,43 @@ if 'IPTABLES' in os.environ:
 
 TABLES = ['filter', 'nat', 'mangle', 'raw']
 
+SYSTEM_TARGET_COLORS = {
+    'ACCEPT': (255, '020'),
+    'DROP': (255, '200'),
+    'REJECT': (255, '200'),
+    'RETURN': (255, '003'),
+    'DNAT': (255, '204'),
+    'SNAT': (255, '204'),
+    'MASQUERADE': (255, '204'),
+    'LOG': ('155', '000'),
+}
+
+COLOR_IP = '051'
+COLOR_PORT = '054'
+COLOR_NETMASK = '510'
+
 
 def col256(text, fg=None, bg=None):
     if not isinstance(text, unicode):
         text = unicode(text, encoding='utf-8')
     buf = io.StringIO()
     if fg is not None:
-        buf.write(u'\x1b[38;5;{0:d}m'.format(fg))
+        buf.write(u'\x1b[38;5;{0:d}m'.format(_to_color(fg)))
     if bg is not None:
-        buf.write(u'\x1b[48;5;{0:d}m'.format(bg))
+        buf.write(u'\x1b[48;5;{0:d}m'.format(_to_color(bg)))
     buf.write(text)
     buf.write(u'\x1b[0m')
     return buf.getvalue()
+
+
+def _to_color(num):
+    if isinstance(num, (int, long)):
+        return num  # Assume it is already a color
+
+    if isinstance(num, basestring) and len(num) <= 3:
+        return 16 + int(num, 6)
+
+    raise ValueError("Invalid color: {0!r}".format(num))
 
 
 def strlen_no_colors(s):
@@ -74,6 +100,14 @@ def _split_blocks(lines):
         yield buf
 
 
+def _colorize_chain_name(name):
+    h = hashlib.sha1(name).hexdigest()
+    color = int(h, 16) % 216
+    return ''.join((
+        col256('  ', bg=color),
+        col256(" {0} ".format(name), bg='335', fg=232)))
+
+
 def _colorize_chain_header(line):
     regex = r"^(?P<prefix>Chain\s+)(?P<name>[^\s]+)\s*\((?P<attrs>.*)\)"  # noqa
     matches = re.match(regex, line.rstrip())
@@ -82,12 +116,12 @@ def _colorize_chain_header(line):
     data['attrs'] = data['attrs'].replace('ACCEPT', col256('ACCEPT', fg=82))
     data['attrs'] = data['attrs'].replace('DROP', col256('DROP', fg=160))
 
-    return (
-        u"\033[48;5;235m\033[K"
-        u"\033[1m{prefix}\033[0m"
-        u"\033[48;5;20m\033[38;5;255m {name} \033[0m"
+    return ''.join((
+        u"\033[0m",
+        col256(" " + data['prefix'], bg=255, fg=232), ' ',
+        _colorize_chain_name(data['name']),
         u" ({attrs})\n"
-        .format(**data))
+        )).format(**data)
 
 
 def _colorize_table_header(row):
@@ -114,17 +148,11 @@ def _colorize_number(num):
 
 
 def _colorize_target_name(name):
-    if name == 'ACCEPT':
-        return col256(name, fg=82)
-    if name in ('DROP', 'REJECT'):
-        return col256(name, fg=160)
-    if name == 'RETURN':
-        return col256(name, fg=33)
-    if name in ('DNAT', 'SNAT', 'MASQUERADE'):
-        return col256(name, fg=92)
-    if name == 'LOG':
-        return col256(name, fg=87)
-    return col256(name, fg=166)
+    if name in SYSTEM_TARGET_COLORS:
+        col = SYSTEM_TARGET_COLORS[name]
+        return col256(" {0} ".format(name), fg=col[0], bg=col[1])
+
+    return _colorize_chain_name(name)
 
 
 def _colorize_protocol(proto):
@@ -162,7 +190,37 @@ def _colorize_interface(intf):
 def _colorize_addr(addr):
     if addr == '0.0.0.0/0':
         return col256(addr, fg=240)
+
+    m = re.match('^(?P<ip>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})$',
+                 addr)
+    if m:
+        return col256(m.group('ip'), fg=COLOR_IP)
+
+    m = re.match('^(?P<ip>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})$',
+                 addr)
+    if m:
+        return col256(m.group('ip'), fg=COLOR_IP)
+
+    m = re.match('^(?P<ip>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})'
+                 '/(?P<netmask>[0-9]+)$',
+                 addr)
+    if m:
+        return ''.join((col256(m.group('ip'), fg=COLOR_IP),
+                        col256('/' + m.group('netmask'), fg=COLOR_NETMASK)))
+
+    m = re.match('^(?P<ip>[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})'
+                 ':(?P<port>[0-9]+)$',
+                 addr)
+    if m:
+        return ''.join((col256(m.group('ip'), fg=COLOR_IP),
+                        col256(':' + m.group('port'), fg=COLOR_PORT)))
+
     return addr
+
+
+def _colorize_port(port):
+    # Can be: <port> or <porte:<port>
+    return ':'.join(col256(p, fg=COLOR_PORT) for p in port.split(':'))
 
 
 def _colorize_extras_token(tok):
@@ -170,6 +228,17 @@ def _colorize_extras_token(tok):
         return col256(tok, 45)
     if re.match(r'^0x[0-9]+$', tok):
         return col256(tok, 48)
+
+    if (tok.startswith('dpt:') or tok.startswith('dpts:') or
+            tok.startswith('spt:') or tok.startswith('spts:')):
+
+        parts = tok.split(':', 1)
+        return parts[0] + ':' + _colorize_port(parts[1])
+
+    if tok.startswith('to:') or tok.startswith('from:'):
+        parts = tok.split(':', 1)
+        return parts[0] + ':' + _colorize_addr(parts[1])
+
     # todo: highlight:
     # dpt:<port> dpts:<port>:<port>
     # spt:<port> spts:<port>:<port>
@@ -244,5 +313,6 @@ def colorize_output(lines):
 for table in TABLES:
     output = subprocess.check_output(IPTABLES + [
         '-t', table, '--list', '--line-numbers', '-v', '-n'])
-    print("\033[48;5;124m\033[K Table: \033[1m{0} \033[0m\n".format(table))
+    print("\033[0m\033[48;5;{0}m\033[K Table: \033[1m{1} \033[0m\n"
+          .format(_to_color('200'), table))
     print(colorize_output(iter(output.splitlines())).encode('utf-8'))
