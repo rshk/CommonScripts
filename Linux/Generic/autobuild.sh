@@ -108,7 +108,7 @@ echo "Will run \`${COMMAND}' upon changes"
 echo "------------------------------------------------------------"
 
 fade() {
-    sed 's/^\(.*\)$/\x1b[1;30m\1\x1b[0m/'
+    sed 's/^\(.*\)$/\x1b[2m\1\x1b[0m/'
 }
 
 while :; do
