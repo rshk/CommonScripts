@@ -24,7 +24,9 @@ from inotify.constants import (
     IN_MOVED_FROM, IN_MOVED_TO)
 
 enable_notifications = False
-default_mask = (IN_CLOSE_WRITE | IN_CREATE | IN_DELETE | IN_MODIFY |
+# default_mask = (IN_CLOSE_WRITE | IN_CREATE | IN_DELETE | IN_MODIFY |
+#                 IN_MOVE | IN_MOVED_FROM | IN_MOVED_TO | IN_MOVE_SELF)
+default_mask = (IN_CLOSE_WRITE | IN_CREATE | IN_DELETE |
                 IN_MOVE | IN_MOVED_FROM | IN_MOVED_TO | IN_MOVE_SELF)
 
 default_exclude_re = re.compile(rb'^(.*~|\.#.*|#.*#)$')
@@ -113,7 +115,7 @@ class InotifyTrees(inotify.adapters.BaseTree):
                 q.append(entry_filepath)
 
 
-def watch_events(listen_paths, exclude_paths):
+def block_until_next_event(listen_paths, exclude_paths):
     listen_paths = [x.encode() for x in listen_paths]
     watcher = InotifyTrees(listen_paths)
     for event in watcher.event_gen():
@@ -124,7 +126,7 @@ def watch_events(listen_paths, exclude_paths):
         if not header.mask & default_mask:
             continue
         if name_match(filename, exclude_paths):
-            yield event
+            return event
 
 
 def check_notify_send():
@@ -192,7 +194,8 @@ def main():
     print('Will run: {}'.format(quote_command(args.command)))
     print('-' * 60)
 
-    for event in watch_events(args.listen_paths, args.exclude_paths):
+    while True:
+        event = block_until_next_event(args.listen_paths, args.exclude_paths)
         hdr, names, path, filename = event
         msg('{} {}'
             .format(', '.join(names),
