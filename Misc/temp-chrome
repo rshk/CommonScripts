@@ -1,0 +1,12 @@
+#!/bin/bash
+
+USER_DATA_DIR="$( mktemp -d -t chrome-settings.XXXXX )"
+
+echo "Starting chrome with data dir: ${USER_DATA_DIR}"
+
+# Note: if you want to start with a different locale, export env vars:
+# LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 TZ=PST
+
+google-chrome --user-data-dir="${USER_DATA_DIR}" --no-default-browser-check --no-first-run "$@"
+
+rm -rf "$USER_DATA_DIR"
